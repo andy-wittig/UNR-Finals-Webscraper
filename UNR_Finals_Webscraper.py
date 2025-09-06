@@ -16,7 +16,7 @@ def getFinalsSchedule(finalsSchedulePath):
 
     try:
         response = requests.get(finalsSchedulePath)
-    except requests.exceptions as error:
+    except requests.exceptions.RequestException as error:
         print ("Error when attepting to get finals schedule:", error)
         return {}
 
@@ -26,39 +26,49 @@ def getFinalsSchedule(finalsSchedulePath):
         #print (soup.prettify())
 
         contentDiv = soup.find("div", class_="body-copy-wrapper")
-        if (contentDiv):
-            currentFinalsDay = ""
-
-            for table in contentDiv.find_all("tbody"):
-                tableHeader = table.find_previous("h2")
-                finalExamDay = (tableHeader.text.strip())
-
-                tableContent = table.text.strip()
-                lines = tableContent.splitlines()
-                print (tableContent)
-
-                dayKeyWords = ["(M)", "(T)", "(W)", "(R)", "(F)", "(MW)", "(MWF)", "(TR)"]
-                scheduleArray = []
-
-                for i in range(0, len(lines)):
-                    if (i == 0): #Class Start Time
-                        scheduleArray.append(lines[i])
-                    elif (i == 1): #Days Class is Held On
-                        classDays = []
-                        words = lines[i].split()
-
-                        for word in words:
-                            if (word in dayKeyWords):
-                                classDays.append(word)
-
-                        scheduleArray.append(classDays)
-                    else: #Final Meeting Time
-                        scheduleArray.append(lines[i])
-
-                finalsSchedule[finalExamDay].append(scheduleArray)
-        else:
+        if (not contentDiv):
             print ("No content was found.")
             return {}
+
+        for table in contentDiv.find_all("tbody"):
+            tableHeader = table.find_previous("h2")
+            if (not tableHeader):
+                continue
+
+            finalExamDay = (tableHeader.text.strip())
+
+            tableContent = table.text.strip()
+            #print (tableContent)
+
+            dayKeyWords = ["(M)", "(T)", "(W)", "(R)", "(F)", "(MW)", "(MWF)", "(TR)", "Varies"]
+
+            for row in table.find_all("tr"):
+                scheduleArray = []
+                columns = []
+
+                for column in row.find_all("td"):
+                    columnContent = column.text.strip()
+                    if (not columnContent): continue
+                    print (columnContent)
+                    columns.append(columnContent)
+
+                if (len(columns) >= 1): #Class Start Time
+                    scheduleArray.append(columns[0])
+
+                if (len(columns) >= 2): #Days Class is Held On
+                    classDays = []
+                    words = columns[1].split()
+
+                    for word in words:
+                        if (word in dayKeyWords):
+                            classDays.append(word)
+
+                    scheduleArray.append(classDays)
+
+                if (len(columns) >= 3): #Final Meeting Time
+                    scheduleArray.append(columns[2])
+
+            finalsSchedule[finalExamDay].append(scheduleArray)
         
         return finalsSchedule
     else:
