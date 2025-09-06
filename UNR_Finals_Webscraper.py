@@ -49,7 +49,7 @@ def getFinalsSchedule(finalsSchedulePath):
                 for column in row.find_all("td"):
                     columnContent = column.text.strip()
                     if (not columnContent): continue
-                    print (columnContent)
+                    #print (columnContent)
                     columns.append(columnContent)
 
                 if (len(columns) >= 1): #Class Start Time
@@ -84,9 +84,14 @@ def getClassSchedule(schedulePath):
         print ("File path not found:", error)
         return {}
 
-    page = reader.pages[0]
-    pageText = page.extract_text()
+    pageText = ""
+    for i in range(0, len(reader.pages)):
+        page = reader.pages[i]
+        pageText += page.extract_text()
+
     pageLines = pageText.splitlines()
+
+    #print (pageText)
 
     classSchedule = {
         "Monday": [],
@@ -119,21 +124,29 @@ def getClassSchedule(schedulePath):
                 if (prevWord):
                     if (prevWord == "to"):
                         for day in days:
-                            classSchedule[day].append(times)
+                            classSchedule[day].append(times[0])
                         days = []
                         times = []
 
     return classSchedule
+
+def generateCompleteSchedule(classDict, finalsDict):
+    pass
 
 def main():
     pdfFilePath = input("Please provide the file path to the .pdf of your UNR class schedule: \n")
     while (getClassSchedule(pdfFilePath) == {}):
         pdfFilePath = input("Please provide the file path to the .pdf of your UNR class schedule: \n")
 
-    print ("Class Schedule:\n", getClassSchedule(pdfFilePath))
+    classSchedule = getClassSchedule(pdfFilePath)
+    print ("Class Schedule:\n", classSchedule)
 
     finalsSchedulePath = "https://www.unr.edu/admissions/records/academic-calendar/finals-schedule"
-    print ("\nFinals Schedule:\n", getFinalsSchedule(finalsSchedulePath))
+    finalsSchedule = getFinalsSchedule(finalsSchedulePath)
+    print ("\nFinals Schedule:\n", finalsSchedule)
+
+    completedSchedule = generateCompleteSchedule(classSchedule, finalsSchedule)
+    print (completedSchedule)
 
 if __name__ == "__main__":
     main()
