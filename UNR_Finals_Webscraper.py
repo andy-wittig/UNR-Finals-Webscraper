@@ -68,7 +68,7 @@ def getFinalsSchedule(finalsSchedulePath):
                 if (len(columns) >= 3): #Final Meeting Time
                     scheduleArray.append(columns[2])
 
-            finalsSchedule[finalExamDay].append(scheduleArray)
+                finalsSchedule[finalExamDay].append(scheduleArray)
         
         return finalsSchedule
     else:
@@ -128,7 +128,15 @@ def getClassSchedule(schedulePath):
                         days = []
                         times = []
 
-    return classSchedule
+    #Invert Class Schedule Mapping
+    invertedClassSchedule = {}
+    for day, times in classSchedule.items():
+        for time in times:
+            if time not in invertedClassSchedule:
+                invertedClassSchedule[time] = []
+            invertedClassSchedule[time].append(day)
+
+    return invertedClassSchedule
 
 def generateCompleteSchedule(classDict, finalsDict):
     pass
