@@ -122,8 +122,9 @@ def getClassSchedule(schedulePath):
         pageText += page.extract_text()
 
     pageLines = pageText.splitlines()
+    pageLines.append("END")
 
-    #print (pageText)
+    print (pageText)
 
     classSchedule = {
         "M": [],
@@ -149,10 +150,29 @@ def getClassSchedule(schedulePath):
     for line in pageLines:
         words = line.split()
         if (not words): continue
+
+        if ("LAB" in words or "LEC" in words or "END" in words):
+            if (days and times): #Both arrays are not empty
+                integerTimes = [int(item) for item in times] #Convert to int to get earliest time
+                integerTimes.sort()
+                earliestStartTime = integerTimes[0]
+
+                #Reconstruct format -- converting to int loses military time format (0800 -> 800)
+                if (earliestStartTime < 100):
+                    earliestStartTime = f"{earliestStartTime:02d}00"
+                elif (earliestStartTime < 1000):
+                    earliestStartTime = f"0{earliestStartTime:02d}"
+                
+                earliestStartTime = str(earliestStartTime)
+
+                for day in days:
+                    classSchedule[day].append(earliestStartTime)
+            days = []
+            times = []
+
         if (words[0] == "Days:" or words[0] == "Times:"):
             for i in range(1, len(words)):
                 currentWord = words[i]
-                prevWord = words[i - 1]
                 #print(currentWord)
 
                 if (currentWord in dayAbreviationMap.keys()):
@@ -162,13 +182,6 @@ def getClassSchedule(schedulePath):
                     time = currentWord.replace(":", "")
                     time = time.replace(" ", "")
                     times.append(toMilitary(time))
-
-                if (prevWord):
-                    if (prevWord == "to"):
-                        for day in days:
-                            classSchedule[day].append(times[0])
-                        days = []
-                        times = []
 
     #Invert Class Schedule Mapping
     invertedClassSchedule = {}
