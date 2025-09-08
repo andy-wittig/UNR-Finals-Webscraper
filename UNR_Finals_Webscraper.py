@@ -3,6 +3,7 @@ from re import I
 from pypdf import PdfReader
 import requests
 from bs4 import BeautifulSoup
+import csv
 
 def toMilitary(time):
     if not ("AM" in time or "PM" in time):
@@ -189,10 +190,15 @@ def generateCompleteSchedule(classDict, finalsDict):
             startTime = entry[0]
             if (startTime in classDict.keys()):
                 if (classDict[startTime] in entry[1]):
-                    finalDays.append(str(day) + " at " + entry[2])
+                    finalDays.append([str(day), entry[2]])
 
     return finalDays
 
+def generateCSV(completeSchedule):
+    with open('StudentFinalsSchedule.csv', 'w', newline='') as csvfile:
+        scheduleWriter = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for entry in completeSchedule:
+            scheduleWriter.writerow(entry)
 
 def main():
     pdfFilePath = input("Please provide the file path to the .pdf of your UNR class schedule: \n")
@@ -208,6 +214,8 @@ def main():
 
     completedSchedule = generateCompleteSchedule(classSchedule, finalsSchedule)
     print ("\nCombined Schedule:\n", completedSchedule)
+
+    generateCSV(completedSchedule)
 
 if __name__ == "__main__":
     main()
