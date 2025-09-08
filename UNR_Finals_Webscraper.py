@@ -124,7 +124,7 @@ def getClassSchedule(schedulePath):
     pageLines = pageText.splitlines()
     pageLines.append("END")
 
-    print (pageText)
+    #print (pageText)
 
     classSchedule = {
         "M": [],
@@ -192,7 +192,8 @@ def getClassSchedule(schedulePath):
             invertedClassSchedule[time].append(day)
 
     for key in invertedClassSchedule:
-        invertedClassSchedule[key] = "".join(invertedClassSchedule[key])
+        order = {"M":0, "T":1, "W":2, "R":3, "F":4, "S":5}
+        invertedClassSchedule[key] = "".join(sorted(invertedClassSchedule[key], key=lambda x: order[x]))
 
     return invertedClassSchedule
 
@@ -213,6 +214,8 @@ def generateCSV(completeSchedule):
         scheduleWriter.writerow(['Day', 'Time'])
         for entry in completeSchedule:
             scheduleWriter.writerow(entry)
+
+    print ("Students final schedule has been saved as StudentFinalsSchedule.csv")
 
 def main():
     pdfFilePath = input("Please provide the file path to the .pdf of your UNR class schedule: \n")
