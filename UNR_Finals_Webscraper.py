@@ -1,7 +1,28 @@
+from ast import For
 from re import I
 from pypdf import PdfReader
 import requests
 from bs4 import BeautifulSoup
+
+def toMilitary(time):
+    if not ("AM" in time or "PM" in time):
+        return time
+
+    if ("AM" in time):
+        newTime = int(time.replace("AM", ""))
+        if (newTime < 100):
+            newTime = f"{newTime:02d}00"
+        elif (newTime < 1000):
+            newTime = f"{newTime:02d}0"
+        return str(newTime)
+    else:
+        newTime = int(time.replace("PM", ""))
+        if (newTime < 100):
+            newTime = f"{newTime:02d}00"
+        elif (newTime < 1000):
+            newTime = f"{newTime:02d}0"
+        newTime = int(newTime) + 1200
+        return str(newTime)
 
 def getFinalsSchedule(finalsSchedulePath):
     finalsSchedule = {
@@ -10,8 +31,7 @@ def getFinalsSchedule(finalsSchedulePath):
         "Wednesday": [],
         "Thursday": [],
         "Friday": [],
-        "Saturday": [],
-        "Sunday": []
+        "Saturday": []
     }
 
     try:
@@ -53,7 +73,16 @@ def getFinalsSchedule(finalsSchedulePath):
                     columns.append(columnContent)
 
                 if (len(columns) >= 1): #Class Start Time
-                    scheduleArray.append(columns[0])
+                    startTime = columns[0]
+                    #Format Time
+                    startTime = startTime.replace("a.m.", "AM")
+                    startTime = startTime.replace("p.m.", "PM")
+                    startTime = startTime.replace(":", "")
+                    startTime = startTime.replace(" ", "")
+
+                    startTime = toMilitary(startTime)
+
+                    scheduleArray.append(startTime)
 
                 if (len(columns) >= 2): #Days Class is Held On
                     classDays = []
@@ -61,7 +90,9 @@ def getFinalsSchedule(finalsSchedulePath):
 
                     for word in words:
                         if (word in dayKeyWords):
-                            classDays.append(word)
+                            dayKey = word.replace("(", "")
+                            dayKey = dayKey.replace(")", "")
+                            classDays.append(dayKey)
 
                     scheduleArray.append(classDays)
 
@@ -94,13 +125,21 @@ def getClassSchedule(schedulePath):
     #print (pageText)
 
     classSchedule = {
-        "Monday": [],
-        "Tuesday": [],
-        "Wednesday": [],
-        "Thursday": [],
-        "Friday": [],
-        "Saturday": [],
-        "Sunday": []
+        "M": [],
+        "T": [],
+        "W": [],
+        "R": [],
+        "F": [],
+        "S": []
+    }
+
+    dayAbreviationMap = {
+        "Monday": "M",
+        "Tuesday": "T",
+        "Wednesday": "W",
+        "Thursday": "R",
+        "Friday": "F",
+        "Saturday": "S"
     }
     
     days = []
@@ -115,11 +154,13 @@ def getClassSchedule(schedulePath):
                 prevWord = words[i - 1]
                 #print(currentWord)
 
-                if (currentWord in classSchedule.keys()):
-                    days.append(currentWord)
+                if (currentWord in dayAbreviationMap.keys()):
+                    days.append(dayAbreviationMap[currentWord])
 
                 if ("AM" in currentWord or "PM" in currentWord):
-                    times.append(currentWord)
+                    time = currentWord.replace(":", "")
+                    time = time.replace(" ", "")
+                    times.append(toMilitary(time))
 
                 if (prevWord):
                     if (prevWord == "to"):
@@ -136,10 +177,19 @@ def getClassSchedule(schedulePath):
                 invertedClassSchedule[time] = []
             invertedClassSchedule[time].append(day)
 
+    for key in invertedClassSchedule:
+        invertedClassSchedule[key] = "".join(invertedClassSchedule[key])
+
     return invertedClassSchedule
 
 def generateCompleteSchedule(classDict, finalsDict):
-    pass
+    for day in finalsDict:
+        for entry in finalsDict[day]:
+            startTime = entry[0]
+            if (startTime in classDict.keys()):
+                if (classDict[startTime] == entry[1]):
+                    print (day)
+
 
 def main():
     pdfFilePath = input("Please provide the file path to the .pdf of your UNR class schedule: \n")
