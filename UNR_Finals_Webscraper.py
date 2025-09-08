@@ -196,7 +196,8 @@ def generateCompleteSchedule(classDict, finalsDict):
 
 def generateCSV(completeSchedule):
     with open('StudentFinalsSchedule.csv', 'w', newline='') as csvfile:
-        scheduleWriter = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        scheduleWriter = csv.writer(csvfile)
+        scheduleWriter.writerow(['Day', 'Time'])
         for entry in completeSchedule:
             scheduleWriter.writerow(entry)
 
