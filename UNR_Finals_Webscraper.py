@@ -13,14 +13,14 @@ def toMilitary(time):
         if (newTime < 100):
             newTime = f"{newTime:02d}00"
         elif (newTime < 1000):
-            newTime = f"{newTime:02d}0"
+            newTime = f"0{newTime:02d}"
         return str(newTime)
     else:
         newTime = int(time.replace("PM", ""))
         if (newTime < 100):
             newTime = f"{newTime:02d}00"
         elif (newTime < 1000):
-            newTime = f"{newTime:02d}0"
+            newTime = f"0{newTime:02d}"
         newTime = int(newTime) + 1200
         return str(newTime)
 
@@ -183,12 +183,15 @@ def getClassSchedule(schedulePath):
     return invertedClassSchedule
 
 def generateCompleteSchedule(classDict, finalsDict):
+    finalDays = []
     for day in finalsDict:
         for entry in finalsDict[day]:
             startTime = entry[0]
             if (startTime in classDict.keys()):
-                if (classDict[startTime] == entry[1]):
-                    print (day)
+                if (classDict[startTime] in entry[1]):
+                    finalDays.append(str(day) + " at " + entry[2])
+
+    return finalDays
 
 
 def main():
@@ -204,7 +207,7 @@ def main():
     print ("\nFinals Schedule:\n", finalsSchedule)
 
     completedSchedule = generateCompleteSchedule(classSchedule, finalsSchedule)
-    print (completedSchedule)
+    print ("\nCombined Schedule:\n", completedSchedule)
 
 if __name__ == "__main__":
     main()
